@@ -2,6 +2,7 @@ import os
 import sys
 import pygame
 from pacman import Pacman
+from view_lvl import Level
 
 
 pygame.init()
@@ -11,7 +12,7 @@ size = width, height = PAC_SIZE[0] * scale, PAC_SIZE[1] * scale + 80
 screen = pygame.display.set_mode(size)
 all_sprites = pygame.sprite.Group()
 angle = 0
-pacman = Pacman(208, 312, 32, 32, 1)
+pacman = Pacman(208, 316, 24, 24, 1)
 
 
 def load_image(name, colorkey=None):
@@ -46,7 +47,13 @@ class Field(pygame.sprite.Sprite):
 
 if __name__ == '__main__':
     clock = pygame.time.Clock()
+    lvl = Level()
     field = Field()
+    lvl.new_lvl()
+    lst_color_walls = [pygame.Color(71, 183, 174, 0), pygame.Color(255, 183, 255, 0)]
+    lvl.lst_color_walls.append(lst_color_walls)
+    field.image = lvl.get_image_walls()
+    field.mask =  pygame.mask.from_surface(field.image)
     running = True
     while running:
         for event in pygame.event.get():

@@ -100,10 +100,6 @@ class Level:
                     for x in range(pix_size[0]):
                         for y in range(pix_size[1]):
                             pix_arr[i * pix_size[0] + x, j * pix_size[1] + y] = pix_arr_cell[x, y]
-                elif self.lvl[i, j] == 4:
-                    for x in range(pix_size[0]):
-                        for y in range(2):
-                            pix_arr[i * pix_size[0] + x, j * pix_size[1] + y + 3] = self.lst_color_walls[im_pack][1]
 
         im = pygame.transform.scale(pix_arr.surface, (self.size[0] * scale, self.size[1] * scale))
         im.set_colorkey(pygame.Color('black'))
