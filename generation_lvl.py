@@ -3,26 +3,27 @@ import numpy as np
 
 
 def find_double_zeros(_ar1, _ar2, x, y):
-    _sh = _ar2.shape
-    _k = _sh[1]
-    if x + _sh[0] - 1 == _ar1.shape[0] or y + _sh[1] - 1 == _ar1.shape[1]:
-        _k = -1
-    for _i, _elem in enumerate(_ar2):
-        for _j, _el in enumerate(_elem[:_k]):
-            if _ar1[_i + x][_j + y] == _el == 0:
-                _n = 0
-                _m = 0
-                for __i in range(-1, 2):
-                    for __j in range(-1, 2):
-                        if _j + __j + y >= _ar1.shape[1]:
-                            continue
-                        if _ar1[_i + __i + x][_j + __j + y] == _el == 0:
-                            _n += 1
-                            if _j + y + __j == _ar1.shape[1] - 1:
-                                _m += 1
-                if _n > 5 or _m > 1:
-                    return True
-    return False
+    test_arr = np.hstack([_ar1.copy(), np.zeros(_ar1.shape[0], dtype='int8').reshape(_ar1.shape[0], 1),
+                          np.ones(_ar1.shape[0], dtype='int8').reshape(_ar1.shape[0], 1) * 2])
+    if not sum_ar(test_arr, _ar2, x, y):
+        raise ValueError('error in sum_ar in find_double_zeros')
+    num_double_zeros = 0
+    for _a in range(_ar2.shape[0]):
+        for _b in range(_ar2.shape[1]):
+            if test_arr[_a + x, _b + y] in [0, 5]:
+                neigh_zeros = np.zeros(9).reshape(3, 3) == 1
+                for _x in range(3):
+                    for _y in range(3):
+                        if _b + y + _y - 1 != _ar1.shape[1]:
+                            neigh_zeros[_x, _y] = test_arr[_a + x + _x - 1, _b + y + _y - 1] == 0
+                        else:
+                            neigh_zeros[_x, _y] = True
+                for _i in range(2):
+                    for _j in range(2):
+                        if all([all(_elem) for _elem in neigh_zeros[_i:_i + 2, _j:_j + 2]]):
+                            num_double_zeros += 1
+                            break
+    return num_double_zeros
 
 
 def revers_ar(_a):
@@ -53,7 +54,9 @@ def sum_ar(_ar1, _ar2, x=0, y=0):
             for _j, _el in enumerate(_elem[:k]):
                 if 1 in [_ar1[_i + x][_j + y], _el]:
                     _ar1[_i + x][_j + y] += _el - 1
-                elif _ar1[_i + x][_j + y] == _el == 0:
+                elif _ar1[_i + x][_j + y] == 0 and _el != 2:
+                    _ar1[_i + x][_j + y] = _el
+                elif _ar1[_i + x][_j + y] in [3, 5]:
                     pass
                 else:
                     raise ValueError
@@ -166,13 +169,13 @@ horizontal_wall_figures = [
 vertical_wall_figures = [
         np.rot90(
             np.array([[1, 2, 2, 2, 2, 2, 3, 2, 0, 2, 3, 3, 3, 3, 3, 3, 2, 0, 2, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-                      [1, 1, 0, 0, 0, 2, 3, 2, 0, 2, 3, 3, 3, 3, 3, 3, 2, 0, 2, 3, 3, 3, 2, 0, 0, 0, 0, 0, 0, 1, 1],
+                      [1, 1, 0, 5, 0, 2, 3, 2, 0, 2, 3, 3, 3, 3, 3, 3, 2, 0, 2, 3, 3, 3, 2, 0, 0, 0, 0, 5, 0, 1, 1],
                       [1, 1, 1, 1, 0, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1],
                       [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]],
                      dtype='int8')),
         np.rot90(
             np.array([[1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-                      [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]],
+                      [1, 1, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 1, 1]],
                      dtype='int8'))
     ]
 center_fig = np.rot90(np.array([[0, 4, 3, 3, 3, 2, 0],
@@ -218,37 +221,27 @@ def generation_lvl(view_print=False):
     # figures generation
     if view_print:
         print('figures generation...')
-    ls_found_double_zeros = []
     while coord := find_first_one(pix_ar):
         lst_ok_figures = [[], [], [], []]
         coord = coord[0] - 1, coord[1] - 1
 
         for _elem in all_figures:
             if sum_ar(pix_ar.copy(), _elem, *coord):
-                k = 0
-                if x := find_double_zeros(pix_ar, _elem, *coord):
+                k = 4
+                if find_double_zeros(pix_ar.copy(), _elem, *coord):
                     k = 3
-                elif _elem.size > 56:
+                elif _elem.size >= 56:
                     k = 0
-                elif 21 < _elem.size <= 56:
+                elif 21 < _elem.size < 56:
                     k = 1
                 elif _elem.size <= 21:
                     k = 2
-                ls_found_double_zeros.append(x)
                 lst_ok_figures[k].append(_elem)
 
         for i, ls in enumerate(lst_ok_figures):
-            if view_print:
-                print(i, end=', ')
-                if i == 3:
-                    print()
-                    print(lst_ok_figures)
             if ls:
                 sum_ar(pix_ar, random.choice(ls), *coord)
                 break
-        if view_print:
-            print()
-
     new_pix_ar = np.array(np.ones(28 * 31).reshape(31, 28), dtype='int8')
     for i, _elem in enumerate(pix_ar):
         new_pix_ar[i] = np.hstack([_elem, _elem[range(13, -1, -1)]])
@@ -259,4 +252,4 @@ def generation_lvl(view_print=False):
 
 
 if __name__ == '__main__':
-    print(generation_lvl())
+    generation_lvl(view_print=True)
