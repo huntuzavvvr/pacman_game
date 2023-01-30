@@ -75,13 +75,15 @@ class Level:
         self.lst_color_walls: list[list[pygame.Color]] = []
 
     def new_lvl(self, view_print=False):
-        self.lvl = np.rot90(generation_lvl(view_print=view_print))
+        while True:
+            x = generation_lvl()
+            if type(x) != int:
+                break
+        self.lvl = np.rot90(x)
 
     def get_image_walls(self, im_pack=0):
 
         pix_arr = pygame.PixelArray(pygame.Surface([*self.size]))
-
-        ls_fail_type_pix = []
 
         for i in range(self.width):
             for j in range(self.height):
@@ -100,7 +102,32 @@ class Level:
                     for x in range(pix_size[0]):
                         for y in range(pix_size[1]):
                             pix_arr[i * pix_size[0] + x, j * pix_size[1] + y] = pix_arr_cell[x, y]
+                if self.lvl[i, j] == 4:
+                    pix_arr_cell = pygame.PixelArray(pygame.Surface(pix_size))
 
+                    color = self.lst_color_walls[im_pack][1]
+
+                    pix_arr_cell[0, 4] = color
+                    pix_arr_cell[1, 4] = color
+                    pix_arr_cell[2, 4] = color
+                    pix_arr_cell[3, 4] = color
+                    pix_arr_cell[4, 4] = color
+                    pix_arr_cell[5, 4] = color
+                    pix_arr_cell[6, 4] = color
+                    pix_arr_cell[7, 4] = color
+
+                    pix_arr_cell[0, 3] = color
+                    pix_arr_cell[1, 3] = color
+                    pix_arr_cell[2, 3] = color
+                    pix_arr_cell[3, 3] = color
+                    pix_arr_cell[4, 3] = color
+                    pix_arr_cell[5, 3] = color
+                    pix_arr_cell[6, 3] = color
+                    pix_arr_cell[7, 3] = color
+
+                    for x in range(pix_size[0]):
+                        for y in range(pix_size[1]):
+                            pix_arr[i * pix_size[0] + x, j * pix_size[1] + y] = pix_arr_cell[x, y]
         im = pygame.transform.scale(pix_arr.surface, (self.size[0] * scale, self.size[1] * scale))
         im.set_colorkey(pygame.Color('black'))
         return im
@@ -112,7 +139,7 @@ if __name__ == '__main__':
     lvl = Level()
     lvl.new_lvl()
 
-    lst_color_walls = [pygame.Color(255, 0, 0, 0), pygame.Color(0, 0, 255, 0)]
+    lst_color_walls = [pygame.Color(0, 0, 255, 0), pygame.Color(0, 0, 255, 0)]
 
     lvl.lst_color_walls.append(lst_color_walls)
 

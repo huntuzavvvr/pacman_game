@@ -10,12 +10,12 @@ def find_double_zeros(_ar1, _ar2, x, y):
     num_double_zeros = 0
     for _a in range(_ar2.shape[0]):
         for _b in range(_ar2.shape[1]):
-            if test_arr[_a + x, _b + y] in [0, 5]:
+            if test_arr[_a + x, _b + y] in [0, 3, 5]:
                 neigh_zeros = np.zeros(9).reshape(3, 3) == 1
                 for _x in range(3):
                     for _y in range(3):
                         if _b + y + _y - 1 != _ar1.shape[1]:
-                            neigh_zeros[_x, _y] = test_arr[_a + x + _x - 1, _b + y + _y - 1] == 0
+                            neigh_zeros[_x, _y] = test_arr[_a + x + _x - 1, _b + y + _y - 1] in [0, 3, 5]
                         else:
                             neigh_zeros[_x, _y] = True
                 for _i in range(2):
@@ -56,6 +56,8 @@ def sum_ar(_ar1, _ar2, x=0, y=0):
                     _ar1[_i + x][_j + y] += _el - 1
                 elif _ar1[_i + x][_j + y] == 0 and _el != 2:
                     _ar1[_i + x][_j + y] = _el
+                elif _ar1[_i + x][_j + y] in [3, 5] and _el == 0:
+                    pass
                 elif _ar1[_i + x][_j + y] in [3, 5]:
                     pass
                 else:
@@ -75,12 +77,16 @@ cent_sym_figures = [
                   [1, 0, 0, 0, 1]], dtype='int8'),
         np.array([[0, 0, 0, 0, 0],
                   [0, 2, 2, 2, 0],
-                  [0, 2, 0, 2, 0],
+                  [0, 2, 3, 2, 0],
                   [0, 2, 2, 2, 0],
                   [0, 0, 0, 0, 0]], dtype='int8'),
         np.array([[0, 0, 0],
                   [0, 2, 0],
-                  [0, 0, 0]], dtype='int8')
+                  [0, 0, 0]], dtype='int8'),
+        np.array([[0, 0, 0, 0],
+                  [0, 2, 2, 0],
+                  [0, 2, 2, 0],
+                  [0, 0, 0, 0]], dtype='int8')
     ]
 ax_sym_figures = [
         np.array([[0, 0, 0, 0],
@@ -95,9 +101,6 @@ ax_sym_figures = [
         np.array([[0, 0, 0, 0, 0, 0, 0],
                   [0, 2, 2, 2, 2, 2, 0],
                   [0, 0, 0, 0, 0, 0, 0]], dtype='int8'),
-        np.array([[0, 0, 0, 0, 0, 0, 0, 0],
-                  [0, 2, 2, 2, 2, 2, 2, 0],
-                  [0, 0, 0, 0, 0, 0, 0, 0]], dtype='int8'),
         np.array([[0, 0, 0, 0, 0],
                   [0, 2, 2, 2, 0],
                   [0, 2, 2, 2, 0],
@@ -116,6 +119,10 @@ ax_sym_figures = [
                   [0, 0, 0, 0, 0, 0, 0, 0]], dtype='int8')
     ]
 none_sym_figures = [
+        np.array([[0, 0, 0, 1],
+                  [0, 2, 0, 0],
+                  [0, 2, 2, 0],
+                  [0, 0, 0, 0]], dtype='int8'),
         np.array([[0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 2, 2, 2, 2, 2, 2, 0],
                   [0, 2, 2, 2, 2, 2, 2, 0],
@@ -178,11 +185,11 @@ vertical_wall_figures = [
                       [1, 1, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 1, 1]],
                      dtype='int8'))
     ]
-center_fig = np.rot90(np.array([[0, 4, 3, 3, 3, 2, 0],
-                                [0, 2, 3, 3, 3, 2, 0],
-                                [0, 2, 3, 3, 3, 2, 0],
-                                [0, 2, 2, 2, 2, 2, 0],
-                                [0, 0, 0, 0, 0, 0, 0]], dtype='int8'), -1)
+center_fig = np.rot90(np.array([[3, 4, 3, 3, 3, 2, 3],
+                                [3, 2, 3, 3, 3, 2, 3],
+                                [3, 2, 3, 3, 3, 2, 3],
+                                [3, 2, 2, 2, 2, 2, 3],
+                                [3, 3, 3, 3, 3, 3, 3]], dtype='int8'), -1)
 
 
 def generation_lvl(view_print=False):
@@ -239,6 +246,9 @@ def generation_lvl(view_print=False):
                 lst_ok_figures[k].append(_elem)
 
         for i, ls in enumerate(lst_ok_figures):
+            if i == 3:
+                print((coord, pix_ar, ls))
+                return -1
             if ls:
                 sum_ar(pix_ar, random.choice(ls), *coord)
                 break

@@ -2,7 +2,8 @@ import os
 import sys
 import pygame
 from pacman import Pacman
-from view_lvl import Level
+from view_lvl import Level, pix_size
+import numpy as np
 
 
 pygame.init()
@@ -13,7 +14,6 @@ screen = pygame.display.set_mode(size)
 all_sprites = pygame.sprite.Group()
 angle = 0
 pacman = Pacman(208, 316, 24, 24, 1)
-
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
@@ -31,6 +31,14 @@ def load_image(name, colorkey=None):
     return image
 
 
+def func_big_orb():
+    print('столкновение 1')
+
+
+def func_small_orb():
+    print('столкновение')
+
+
 class Field(pygame.sprite.Sprite):
     im = load_image("pac_pix.png", colorkey=-1)
     im = im.subsurface(pygame.Rect(228, 0, *PAC_SIZE))
@@ -45,6 +53,27 @@ class Field(pygame.sprite.Sprite):
         self.rect.left = 0
 
 
+class Orb(pygame.sprite.Sprite):
+    def __init__(self, image, x, y):
+        super().__init__(all_sprites)
+        self.image = image
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.top = 48 + x * pix_size[0] * scale
+        self.rect.left = 0 + y * pix_size[1] * scale
+
+    def on_touch(self):
+        pass
+
+    def set_on_touch(self, func):
+        self.on_touch = func
+
+    def update(self):
+        if pygame.sprite.collide_mask(self, pacman):
+            self.on_touch()
+            self.kill()
+
+
 if __name__ == '__main__':
     clock = pygame.time.Clock()
     lvl = Level()
@@ -53,7 +82,28 @@ if __name__ == '__main__':
     lst_color_walls = [pygame.Color(71, 183, 174, 0), pygame.Color(255, 183, 255, 0)]
     lvl.lst_color_walls.append(lst_color_walls)
     field.image = lvl.get_image_walls()
-    field.mask =  pygame.mask.from_surface(field.image)
+    field.mask = pygame.mask.from_surface(field.image)
+
+    image_orb = load_image("pac_pix.png", colorkey=-1).subsurface(pygame.Rect(8, 8, *pix_size))
+    image_big_orb = load_image("pac_pix.png", colorkey=-1).subsurface(pygame.Rect(8, 24, *pix_size))
+    image_orb = pygame.transform.scale(image_orb, (pix_size[0] * scale, pix_size[1] * scale))
+    image_big_orb = pygame.transform.scale(image_big_orb, (pix_size[0] * scale, pix_size[1] * scale))
+
+    level = np.rot90(lvl.lvl, -1)
+
+    n = 0
+
+    for i in range(len(level)):
+        for j in range(len(level[0])):
+            if level[i, j] == 0:
+                n += 1
+                new_orb = Orb(image_orb, i, j)
+                new_orb.set_on_touch(func_small_orb)
+            if level[i, j] == 5:
+                new_orb = Orb(image_big_orb, i, j)
+                new_orb.set_on_touch(func_big_orb)
+    print(n)
+
     running = True
     while running:
         for event in pygame.event.get():
